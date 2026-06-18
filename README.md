@@ -54,14 +54,6 @@ Demo nhỏ sử dụng Minimal API để minh họa:
 - Service layer đơn giản với `ProductService`.
 - Endpoint `/products` để trả danh sách dữ liệu mẫu.
 
-Lệnh tạo project demo:
-
-```bash
-dotnet new web -n DotNet8ApiDemo
-cd DotNet8ApiDemo
-dotnet run
-```
-
 ## File trong repository
 
 - `bao-cao-dotnet-core-8.md`: báo cáo chi tiết về .NET Core 8 dưới góc nhìn migrate từ Spring Boot.
