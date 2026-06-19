@@ -1,0 +1,49 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lab-product-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lab-product-db-init
+    depends_on:
+      - sqlserver
+    environment:
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+    volumes:
+      - ./database/init:/scripts:ro
+    command: >
+      bash -c "
+      for i in {1..60};
+      do /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\" && break;
+      echo 'Waiting for SQL Server...';
+      sleep 2;
+      done;
+      /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -i /scripts/01-create-database.sql
+      "
+
+  api:
+    build:
+      context: ./src/ProductApi
+      dockerfile: Dockerfile
+    container_name: lab-product-api
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=ProductManagementDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+    ports:
+      - "5000:8080"
+
+volumes:
+  sqlserver-data:
+
